@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:power_view_2/components/reusable_card.dart';
@@ -10,6 +11,7 @@ import 'package:power_view_2/screens/fuel.dart';
 import 'package:power_view_2/screens/air_filter.dart';
 import 'package:power_view_2/screens/spark_plug.dart';
 import 'package:hive/hive.dart';
+import 'package:http/http.dart' as http;
 
 class GeneratorData {
   String fuelLevel;
@@ -72,9 +74,9 @@ class InputPage extends StatefulWidget {
 class _InputPageState extends State<InputPage> {
 
   GeneratorData data = GeneratorData(
-    fuelLevel: '67%', 
-    powerOutput: '56kW', 
-    generatorStatus: 'Ready', 
+    fuelLevel: '67%',
+    powerOutput: '56kW',
+    generatorStatus: 'Ready',
     airFilter: '125h',
     sparkPlug: '32%',
   );
@@ -84,6 +86,24 @@ class _InputPageState extends State<InputPage> {
   var box = Hive.box<Map<String, dynamic>>('myBox');
 
   int key = 0;
+
+  Future<http.Response> sendData(String fuelLevel, String powerOutput, String generatorStatus, String airFilter, String sparkPlug) {
+    return http.post(
+      Uri.parse('https://bluetooth-poc-namespace.servicebus.windows.net/bluetooth-poc-event-hub/messages?timeout=60&api-version=2014-01'),
+      headers: <String, String>{
+        'Content-Type': 'application/atom+xml;type=entry;charset=utf-8',
+        'Authorization': 'SharedAccessSignature sr=https%3A%2F%2Fbluetooth-poc-namespace.servicebus.windows.net%2Fbluetooth-poc-event-hub&sig=zZ/buio0KtTKVNi7VG51o0hYAJEOlBLh7XrkAr/gEzI%3D&se=1686758567&skn=RootManageSharedAccesskey'
+      },
+      body: jsonEncode(<String, String>{
+        'FuelLevel': fuelLevel,
+        'PowerOutput': powerOutput, 
+        'GeneratorStatus': generatorStatus, 
+        'AirFilter': airFilter,
+        'SparkPlug': sparkPlug
+        }
+      )
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -217,14 +237,34 @@ class _InputPageState extends State<InputPage> {
               storage.storeData(data, key);
               var random = Random();
               print(Hive.box<Map<String, dynamic>>('myBox').get('$key'));
-              setState(() {
-                data.fuelLevel = '${random.nextInt(101)}%';
-                data.powerOutput = '${random.nextInt(250)}kW'; 
-                data.generatorStatus = 'Ready';
-                data.airFilter = '${random.nextInt(150)}h';
-                data.sparkPlug = '${random.nextInt(101)}%';
-                key++;
-              });
+
+              Future<http.Response> response = sendData(
+                data.fuelLevel, 
+                data.powerOutput, 
+                data.generatorStatus, 
+                data.airFilter, 
+                data.sparkPlug
+              );
+
+              // if (key > 4) {
+              //   int currKey = key % 5;
+              //   Map<String, dynamic>? values = Hive.box<Map<String, dynamic>>('myBox').get('$currKey');
+              //   if (values != null) {
+              //     setState(() {
+              //       data = GeneratorData.fromJson(values);
+              //     });
+              //   }
+              //   key++;
+              // } else {
+                setState(() {
+                  data.fuelLevel = '${random.nextInt(101)}%';
+                  data.powerOutput = '${random.nextInt(250)}kW'; 
+                  data.generatorStatus = 'Ready';
+                  data.airFilter = '${random.nextInt(150)}h';
+                  data.sparkPlug = '${random.nextInt(101)}%';
+                  key++;
+                });
+              // }
             },
           ),
         ],
