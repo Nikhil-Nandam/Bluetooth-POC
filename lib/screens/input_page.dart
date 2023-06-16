@@ -92,7 +92,7 @@ class _InputPageState extends State<InputPage> {
       Uri.parse('https://bluetooth-poc-namespace.servicebus.windows.net/bluetooth-poc-event-hub/messages?timeout=60&api-version=2014-01'),
       headers: <String, String>{
         'Content-Type': 'application/atom+xml;type=entry;charset=utf-8',
-        'Authorization': 'SharedAccessSignature sr=https%3A%2F%2Fbluetooth-poc-namespace.servicebus.windows.net%2Fbluetooth-poc-event-hub&sig=zZ/buio0KtTKVNi7VG51o0hYAJEOlBLh7XrkAr/gEzI%3D&se=1686758567&skn=RootManageSharedAccesskey'
+        'Authorization': 'SharedAccessSignature sr=https%3A%2F%2Fbluetooth-poc-namespace.servicebus.windows.net%2Fbluetooth-poc-event-hub&sig=WlJ2Tpa5DJQt4heMk41BZpYsHbSMa40XP9ve0b5aPP8%3D&se=1687500549&skn=RootManageSharedAccesskey'
       },
       body: jsonEncode(<String, String>{
         'FuelLevel': fuelLevel,
