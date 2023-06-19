@@ -12,6 +12,7 @@ import 'package:power_view_2/screens/air_filter.dart';
 import 'package:power_view_2/screens/spark_plug.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
+import 'package:crypto/crypto.dart';
 
 class GeneratorData {
   String fuelLevel;
@@ -51,15 +52,6 @@ Map<String, dynamic> _$GeneratorDataToJson(GeneratorData instance) => <String, d
 
 class PersistentStorage {
 
-  // static var box = await Hive.openBox<GeneratorData>('generatorDataDB');
-
-  // static var box = initializeBox();
-
-  // dynamic initializeBox() async {
-  //   var box = await Hive.openBox<GeneratorData>('generatorDataDB');
-  //   return box;
-  // }
-
   void storeData(GeneratorData generatorData, int key) async {
     var box = Hive.box<Map<String, dynamic>>('myBox');
     box.put('$key', generatorData.toJson());
@@ -87,12 +79,42 @@ class _InputPageState extends State<InputPage> {
 
   int key = 0;
 
+  int expiry = 1687778049;
+  String signature = 'ietpeBlpSNfaS78mK5q2%2FGiCddBueqavWHr8XMv%2FyMM%3D';
+
+  String sasName = 'RootManageSharedAccesskey';
+  String sbName = 'bluetooth-poc-namespace';
+  String ehName = 'bluetooth-poc-event-hub';
+
+  void createNewToken() {
+    String path = 'https://$sbName.servicebus.windows.net/$ehName';
+    String uri = Uri.encodeQueryComponent(path);
+    List<int> sas = utf8.encode(sas_key);
+    String newExpiry = ((DateTime.now().millisecondsSinceEpoch ~/ 1000) + 604800).toString();
+    List<int> stringToSign = utf8.encode('$uri\n$newExpiry');
+    Hmac hmac = Hmac(sha256, sas);
+    Digest digest = hmac.convert(stringToSign);
+    String base64Mac = base64.encode(digest.bytes);
+    String newSignature = Uri.encodeQueryComponent(base64Mac);
+
+    signature = newSignature;
+    expiry = int.parse(newExpiry);
+  }
+
   Future<http.Response> sendData(String fuelLevel, String powerOutput, String generatorStatus, String airFilter, String sparkPlug) {
+    if (DateTime.now().millisecondsSinceEpoch ~/ 1000 > expiry) {
+      // print('YES');
+      createNewToken();
+    }
+    String uri = 'https://$sbName.servicebus.windows.net/$ehName/messages?timeout=60&api-version=2014-01';
+    String sr = 'https://$sbName.servicebus.windows.net/$ehName';
+    String srEncoded = Uri.encodeQueryComponent(sr);
+    String expiryString = expiry.toString();
     return http.post(
-      Uri.parse('https://bluetooth-poc-namespace.servicebus.windows.net/bluetooth-poc-event-hub/messages?timeout=60&api-version=2014-01'),
+      Uri.parse(uri),
       headers: <String, String>{
         'Content-Type': 'application/atom+xml;type=entry;charset=utf-8',
-        'Authorization': 'SharedAccessSignature sr=https%3A%2F%2Fbluetooth-poc-namespace.servicebus.windows.net%2Fbluetooth-poc-event-hub&sig=WlJ2Tpa5DJQt4heMk41BZpYsHbSMa40XP9ve0b5aPP8%3D&se=1687500549&skn=RootManageSharedAccesskey'
+        'Authorization': 'SharedAccessSignature sr=$srEncoded&sig=$signature&se=$expiryString&skn=$sasName'
       },
       body: jsonEncode(<String, String>{
         'FuelLevel': fuelLevel,
@@ -102,7 +124,7 @@ class _InputPageState extends State<InputPage> {
         'SparkPlug': sparkPlug
         }
       )
-    );
+    );     
   }
 
   @override

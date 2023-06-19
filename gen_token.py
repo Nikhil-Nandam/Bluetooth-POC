@@ -20,8 +20,8 @@ def get_auth_token(sb_name, eh_name, sas_name, sas_value):
     signature = quote(base64.b64encode(signed_hmac_sha256.digest()))
     return  {"sb_name": sb_name,
              "eh_name": eh_name,
-             "token":'SharedAccessSignature sr={}&sig={}&se={}&skn={}' \
-                     .format(uri, signature, expiry, sas_name)
+             "token": 'SharedAccessSignature sr={}&sig={}&se={}&skn={}' \
+                      .format(uri, signature, expiry, sas_name)
             }
 
 print(get_auth_token(

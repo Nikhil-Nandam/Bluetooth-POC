@@ -60,3 +60,5 @@ enum Gender {
   female,
   none,
 }
+
+const String sas_key = 'R/mqADMNldBj5tr1tLKxl6/JxaNuTqhPi+AEhHSBwyY=';
