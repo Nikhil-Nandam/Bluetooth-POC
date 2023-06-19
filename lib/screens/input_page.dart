@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:power_view_2/components/reusable_card.dart';
 import 'package:power_view_2/constants.dart';
+import 'package:power_view_2/main.dart';
 import 'package:power_view_2/screens/power_output.dart';
 import 'package:power_view_2/components/bottom_button.dart';
 import 'package:power_view_2/components/icon_content.dart';
@@ -89,7 +90,7 @@ class _InputPageState extends State<InputPage> {
   void createNewToken() {
     String path = 'https://$sbName.servicebus.windows.net/$ehName';
     String uri = Uri.encodeQueryComponent(path);
-    List<int> sas = utf8.encode(sas_key);
+    List<int> sas = utf8.encode(sasKey);
     String newExpiry = ((DateTime.now().millisecondsSinceEpoch ~/ 1000) + 604800).toString();
     List<int> stringToSign = utf8.encode('$uri\n$newExpiry');
     Hmac hmac = Hmac(sha256, sas);
@@ -121,7 +122,10 @@ class _InputPageState extends State<InputPage> {
         'PowerOutput': powerOutput, 
         'GeneratorStatus': generatorStatus, 
         'AirFilter': airFilter,
-        'SparkPlug': sparkPlug
+        'SparkPlug': sparkPlug,
+        'DeviceName': deviceName,
+        'DeviceVersion': deviceVersion,
+        'DeviceID': deviceID,
         }
       )
     );     
