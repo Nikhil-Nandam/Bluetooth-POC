@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:power_view_2/constants.dart';
 
+// IconContent is to build icons and label them with
+// few similar properties but different customizable
+// options.
 class IconContent extends StatelessWidget {
+
+  // Class fields.
   final String label;
   final IconData icon;
 
+  // Class Constructor.
   IconContent({
     Key? key,
     required this.icon,

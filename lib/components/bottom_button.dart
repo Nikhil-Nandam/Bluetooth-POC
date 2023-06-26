@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:power_view_2/constants.dart';
 
+// BottomButton is to build custom button with
+// few similar properties but different customizable
+// options and actions.
 class BottomButton extends StatelessWidget {
 
+  // Class fields.
   final String bottomText;
   final VoidCallback onTap;
 
+  // Class Constructor.
   const BottomButton({
     required this.bottomText,
     required this.onTap,

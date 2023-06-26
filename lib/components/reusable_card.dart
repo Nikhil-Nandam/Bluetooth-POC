@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 
+// ReusableCard is to build custom cards with
+// few similar properties but different customizable
+// options.
 class ReusableCard extends StatelessWidget {
+
+  // Class fields.
+  // Card colour.
   final Color? colour;
+  // Card child.
   final Widget? cardChild;
+  // OnPress functionality.
   final VoidCallback? onPress;
-  
+
+  // Class constructor.
   ReusableCard({
     Key? key,
     this.colour,

@@ -6,8 +6,10 @@ import 'package:power_view_2/components/bottom_button.dart';
 
 class AirFilter extends StatelessWidget {
 
+  // Class field(s).
   final String airFilter;
 
+  // Class Constructor.
   const AirFilter({
     required this.airFilter,
     super.key
@@ -16,6 +18,7 @@ class AirFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Top App Bar.
       appBar: AppBar(
         title: Text('POWERVIEW'),
       ),
@@ -48,7 +51,7 @@ class AirFilter extends StatelessWidget {
                   ),
                   Text(
                     airFilter,
-                    style: kBMITextStyle,
+                    style: kMetricValueTextStyle,
                   ),
                 ],
               ),
@@ -57,6 +60,7 @@ class AirFilter extends StatelessWidget {
           BottomButton(
             bottomText: 'BACK',
             onTap: () {
+              // Pop this page route from the stack
               Navigator.pop(context);
             },
           ),
