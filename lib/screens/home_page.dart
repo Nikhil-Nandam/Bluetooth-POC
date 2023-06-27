@@ -15,6 +15,8 @@ import 'package:power_view_2/screens/spark_plug.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 // A class 'GeneratorData' where each data instance can be
 // converted into a 'GeneratorData' object.
@@ -92,6 +94,114 @@ class _HomePageState extends State<HomePage> {
     airFilter: '125h',
     sparkPlug: '32%',
   );
+
+  Future<void> checkPermissions() async {
+    var bluetoothStatus = await Permission.bluetooth.status;
+
+    var bluetoothAdStatus = await Permission.bluetoothAdvertise.status;
+
+    var bluetoothConnStatus = await Permission.bluetoothConnect.status;
+
+    var bluetoothScanStatus = await Permission.bluetoothScan.status;
+
+    List<Permission> permissions = [
+      Permission.bluetooth,
+      Permission.bluetoothAdvertise,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+    ];
+
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothAdvertise,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+
+    var permBlue = Permission.bluetooth.request();
+
+    print(statuses[Permission.location]);
+
+    print(statuses[Permission.bluetooth]);
+
+    print(statuses[Permission.bluetoothAdvertise]);
+
+    print(statuses[Permission.bluetoothScan]);
+
+    print(statuses[Permission.bluetoothConnect]);
+    print('permBlue - $permBlue');
+
+
+  }
+
+  void getConnection() async {
+
+      BluetoothDevice device;
+      //BluetoothDevice connectedDevice;
+      FlutterBluePlus conn = FlutterBluePlus.instance;
+      
+        conn.startScan(timeout: Duration(seconds: 60));
+
+
+        var subscription = conn.scanResults.listen((results) async {
+          for (ScanResult r in results) {
+            print('${r.device.name}');
+
+            if (r.device.name == "Siri's M01")
+            {
+              print('device: ${r.device}');
+              device = r.device;
+              print('second device : ${device.name}');
+              conn.stopScan();
+
+              await r.device.connect();
+              List<BluetoothService> services = await device.discoverServices();
+              const service_uuid = "8b764d47-e656-4654-9cda-adce052ef393"; //"0000181c-0000-1000-8000-00805f9b34fb"; //
+                
+              services.forEach((service) async {
+                // do something with service
+                print('Service UUID is ${service.uuid.toString()}');
+                if (service.uuid.toString() == service_uuid){
+                  print('Service');
+                  var characteristics = service.characteristics;
+                  var it = 0;
+                  var columns = ['fuelLevel','powerOutput','generatorStatus','airFilter','sparkPlug'];
+                  for (BluetoothCharacteristic c in characteristics) {
+                        print('characteristic');
+                    
+                        List<int> value = await c.read();
+                        print(columns[it]+" : "+String.fromCharCodes(value));
+                        it+=1;
+                        if(c.uuid == Guid("fa98ad96-5ee6-45f7-8a1e-69335871392e")){
+                            data.fuelLevel = String.fromCharCodes(value);
+                            print(data.fuelLevel+" data.fuelLevel");
+                        }
+                        if(c.uuid == Guid("57b39f5c-056d-479d-ad60-ccdd438daba0")){
+                            data.powerOutput = String.fromCharCodes(value);
+                        }
+                        if(c.uuid == Guid("03204aa0-4cf0-4fd0-9449-94026589d0b0")){
+                            data.generatorStatus = String.fromCharCodes(value);
+                        }
+                        if(c.uuid == Guid("18670e20-5ba6-4b1f-8d08-82f0f4acd607")){
+                            data.airFilter = String.fromCharCodes(value);
+                        }
+                        if(c.uuid == Guid("9b1ae9bc-2335-4a0f-ac38-027dc27c4bfe")){
+                            data.sparkPlug = String.fromCharCodes(value);
+                        }
+                        
+                  }
+                }
+              });
+              print('Connection status: $services');
+            }
+
+          }
+
+        });
+      
+
+    }
 
   // Instantiate a 'PersistentStorage' object to store data.
   PersistentStorage storage = PersistentStorage();
@@ -191,6 +301,13 @@ class _HomePageState extends State<HomePage> {
       )
     );     
   }
+  
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   checkPermissions();
+  //   //getConnection();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -333,6 +450,9 @@ class _HomePageState extends State<HomePage> {
           BottomButton(
             bottomText: 'REFRESH',
             onTap: () {
+              checkPermissions();
+              getConnection();
+
               // Store data in Hive boxes using an instance of 
               // 'PersistentStorage' and passing data and key.
               storage.storeData(data, key, box);
@@ -355,11 +475,11 @@ class _HomePageState extends State<HomePage> {
               // are being updated in the function and leaves the other widgets as is.
               // Instantly refreshes the UI.
               setState(() {
-                data.fuelLevel = '${random.nextInt(101)}%';
-                data.powerOutput = '${random.nextInt(250)}kW'; 
-                data.generatorStatus = 'Running';
-                data.airFilter = '${random.nextInt(150)}h';
-                data.sparkPlug = '${random.nextInt(101)}%';
+                // data.fuelLevel = '${random.nextInt(101)}%';
+                // data.powerOutput = '${random.nextInt(250)}kW'; 
+                // data.generatorStatus = 'Running';
+                // data.airFilter = '${random.nextInt(150)}h';
+                // data.sparkPlug = '${random.nextInt(101)}%';
                 key++;
               });
             },
